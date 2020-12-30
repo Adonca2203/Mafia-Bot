@@ -111,9 +111,15 @@ async def quitGame(ctx):
         
         await ctx.message.channel.set_permissions(ctx.guild.default_role, overwrite=None)
 
+    except:
+        pass
+
     try:
         
         await maf_channel.delete()
+
+    except:
+        pass
 
     ongoing_games[ctx.guild].cog_unload()
 
