@@ -15,6 +15,7 @@ async def on_ready():
 
     print("Ready")
 
+
 async def AddUserToLobby(ctx):
 
     for key, value in servers.items():
@@ -76,46 +77,45 @@ async def CreateMafiaChannel(ctx, all_roles: dict):
     everyone_overwrite.view_channel = False
     maf_overwrite.view_channel = True
 
-    for server_roles in server.roles:
-
-        if "MafiaBot" == server_roles.name:
-
-            mafbotrole = server_roles
+    maf_bot_role = await determine_bot_role(server)
 
     if "mafia-chat" not in channels:
-
         await ctx.send("Creating the channel for Mafia")
-
         current_channel = ctx.message.channel.category
 
+        # Not sure what this is for
         global maf_channel
 
         maf_channel = await server.create_text_channel("mafia-chat", category=current_channel)
-
-        await maf_channel.set_permissions(mafbotrole, overwrite=maf_overwrite, reason="Mafia Game")
+        await maf_channel.set_permissions(maf_bot_role, overwrite=maf_overwrite, reason="Mafia Game")
 
         for player, role in all_roles.items():
-
             if isinstance(role, Mafia):
-
                 await maf_channel.set_permissions(player, overwrite=maf_overwrite, reason="Mafia Game")
 
         await maf_channel.set_permissions(server.default_role, overwrite=everyone_overwrite, reason="Mafia Game")
-
         await ctx.send("Done!")
+
+
+async def determine_bot_role(server):
+    for server_roles in server.roles:
+        # TODO: a way to determine MafiaBot's name with more precision?
+        if "MafiaBot" == server_roles.name:
+            maf_bot_role = server_roles
+    if maf_bot_role is None:
+        raise Exception("Bot cannot find it's role, likely searching for the wrong username")
+    return maf_bot_role
+
 
 @bot.command()
 async def quitGame(ctx):
-
     try:
-        
         await ctx.message.channel.set_permissions(ctx.guild.default_role, overwrite=None)
 
     except:
         pass
 
     try:
-        
         await maf_channel.delete()
 
     except:
