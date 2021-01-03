@@ -4,9 +4,10 @@ import discord
 
 class ChangePhase(commands.Cog):
 
-    def __init__(self, ctx, currentPhase = "Day"):
+    def __init__(self, ctx, players: list, currentPhase = "Day"):
 
         self.currentPhase = currentPhase
+        self.players = players
 
         if self.currentPhase == "Day":
 
@@ -35,8 +36,10 @@ class ChangePhase(commands.Cog):
 
         self.currentPhase = "Day"
         everyone_overwrite = discord.PermissionOverwrite()
-        everyone_overwrite.send_messages = True
-        await self.ctx.message.channel.set_permissions(self.ctx.guild.default_role, overwrite=everyone_overwrite, reason="Mafia Game")
+
+        for player in self.players:
+
+            await self.ctx.message.channel.set_permissions(player, overwrite=None, reason="Mafia Game")
 
         if not self.first_iter:
 

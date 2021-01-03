@@ -4,9 +4,11 @@ from PopulateGame import *
 from Roles import Mafia
 from MainGameLoop import ChangePhase
 from bottoken import TOKEN
+from MainGameLogic import CacheAllRoles, CacheGameLoop
 
 servers = {}
 ongoing_games = {}
+mafia_channels = {}
 
 bot = commands.Bot(command_prefix = "!")
 
@@ -61,11 +63,19 @@ async def start(ctx):
 
     if servers[ctx.guild].count != 8:
 
-        await CreateMafiaChannel(ctx, TestPopulateGame(servers[ctx.guild]))
+        server_player_role = {}
+
+        selected_roles = TestPopulateGame(servers[ctx.guild])
+
+        server_player_role[ctx.guild] = selected_roles
+
+        await CreateMafiaChannel(ctx, selected_roles)
+        await CacheAllRoles(ctx.guild, server_player_role)
 
         if ctx.guild not in ongoing_games.keys():
 
-            ongoing_games[ctx.guild] = ChangePhase(ctx)
+            ongoing_games[ctx.guild] = ChangePhase(ctx, servers[ctx.guild])
+            await CacheGameLoop(ctx.guild, ongoing_games)
 
 
 async def CreateMafiaChannel(ctx, all_roles: dict):
@@ -77,34 +87,21 @@ async def CreateMafiaChannel(ctx, all_roles: dict):
     everyone_overwrite.view_channel = False
     maf_overwrite.view_channel = True
 
-    maf_bot_role = await determine_bot_role(server)
+    #maf_bot_role = await determine_bot_role(server)
 
     if "mafia-chat" not in channels:
         await ctx.send("Creating the channel for Mafia")
         current_channel = ctx.message.channel.category
 
-        # Not sure what this is for
-        global maf_channel
-
         maf_channel = await server.create_text_channel("mafia-chat", category=current_channel)
-        await maf_channel.set_permissions(maf_bot_role, overwrite=maf_overwrite, reason="Mafia Game")
+        mafia_channels[ctx.guild] = maf_channel
+        await maf_channel.set_permissions(bot.user, overwrite=maf_overwrite, reason="Mafia Game")
 
         for player, role in all_roles.items():
             if isinstance(role, Mafia):
                 await maf_channel.set_permissions(player, overwrite=maf_overwrite, reason="Mafia Game")
-
-        await maf_channel.set_permissions(server.default_role, overwrite=everyone_overwrite, reason="Mafia Game")
-        await ctx.send("Done!")
-
-
-async def determine_bot_role(server):
-    for server_roles in server.roles:
-        # TODO: a way to determine MafiaBot's name with more precision?
-        if "MafiaBot" == server_roles.name:
-            maf_bot_role = server_roles
-    if maf_bot_role is None:
-        raise Exception("Bot cannot find it's role, likely searching for the wrong username")
-    return maf_bot_role
+            else:
+                await maf_channel.set_permissions(player, overwrite=everyone_overwrite, reason="Mafia Game")
 
 
 @bot.command()
@@ -112,15 +109,17 @@ async def quitGame(ctx):
     try:
         await ctx.message.channel.set_permissions(ctx.guild.default_role, overwrite=None)
 
-    except:
-        pass
+        for player in servers[ctx.guild]:
 
-    try:
-        await maf_channel.delete()
+            await ctx.message.channel.set_permissions(player, overwrite=None)
+
+        await mafia_channels[ctx.guild].delete()
 
     except:
         pass
 
     ongoing_games[ctx.guild].cog_unload()
+    del ongoing_games[ctx.guild]
+    del servers[ctx.guild]
 
 bot.run(TOKEN)
