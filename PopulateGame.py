@@ -47,5 +47,3 @@ def TestPopulateGame(players: list) -> dict:
         roles_dict[player] = playerchoice
 
     return roles_dict
-
-#TestPopulateGame(_testlist)
