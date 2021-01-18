@@ -19,13 +19,15 @@ roles_dict = {}
 
 def PopulateGame(players: list) -> dict:
 
+    choose_pool = all_roles
+
     for player in players:
 
-        _retrole = random.choice(all_roles)
+        _retrole = random.choice(choose_pool)
 
         playerchoice = _retrole(player)
 
-        all_roles.remove(_retrole)
+        choose_pool.remove(_retrole)
 
         roles_dict[player] = playerchoice
 

@@ -1,5 +1,8 @@
 
-from Roles import Mafia, Innocent, Role
+from Roles import Mafia, Innocent, Role, DayActor
+from GameManager import DetermineWin
+from pubsub import pub
+import asyncio
 
 all_roles = {}
 game_loops = {}
@@ -41,33 +44,66 @@ async def CacheAllRoles(server, server_player_role_pair: dict) -> None:
     print(f"{mafia_roles}, {innocent_roles}")
 
 # Function used to kill players, the default reason being suicide (they chose to leave the game)
-async def Kill_Player(player_role: dict, reason = "Committed Suicide") -> Role:
+async def Kill_Player(player_list: list, reason = "Committed Suicide") -> dict:
 
-    #TODO: Implement
-    # Remove the player and role instance from any of the dict caches they may belong to, if array is empty delete the key (that game is over)
+    dead_dict = {}
+
+    for player in player_list:
+
+        del all_roles[player]
+
+        if isinstance(player, Innocent):
+
+            del innocent_roles[player]
+
+        else:
+
+            del mafia_roles[player]
+
+        dead_dict[player] = reason
+
+
+    return dead_dict
+
+# Day phase function. An event Listener
+
+async def Subscribe():
+
+    pub.subscribe(DayHandler, "Day")
+    pub.subscribe(VoteHandler, "Vote")
+    pub.subscribe(NightHandler, "Night")
+
+def DayHandler(discord_server):
+
+    async def DayHandlerAsync():
+
+        # Commented out for testing purposes
+
+        #if await DetermineWin(innocent_roles, mafia_roles, all_roles) is None:
+        
+            for player, role in all_roles[discord_server].items():
+
+                if isinstance(role, DayActor):
+
+                    await player.send("You are a day actor")
+
+    asyncio.create_task(DayHandlerAsync())
+  
+# Vote phase function. An event Listener
+def VoteHandler(discord_server):
 
     pass
 
-# Day phase function called from game loop on begin day phase
-
-async def PhaseHandler(discord_server):
-
-    #DM all users with a day ability and instructions on how to use it.
-    
-    # Will use cog to keep running game loop for phase
-    while(game_loops[discord_server].currentPhase == "Day"):
-
-        pass
-
-    # Vote Phase function called from game loop on begin vote phase
-
-    while(game_loops[discord_server].currentPhase == "Vote"):
-
-        pass
-
+# Night phase function. An event Listener
+def NightHandler(discord_server):
     #DM all users with a night ability and instructions on how to use it.
 
-    # Will use cog to keep running game loop for phase
-    while(game_loops[discord_server].currentPhase == "Night"):
+    async def NightHandlerAsync():
 
-        pass
+        # Commented out for testing purposes
+
+        for player, role in all_roles[discord_server].items():
+
+            await player.send("You are a night actor")
+
+    asyncio.create_task(NightHandlerAsync())

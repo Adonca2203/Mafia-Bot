@@ -1,0 +1,17 @@
+
+integer:
+
+272747536
+
+needs these permissions to functions:
+
+Manage Roles
+Manage Channels
+View Channels
+Send Messages
+Embed Links
+Attach Files
+Read Message History
+Mute Members
+
+subject to additions or removals

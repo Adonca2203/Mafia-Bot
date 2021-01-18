@@ -25,6 +25,12 @@ class Unique():
 
     pass
 
+class DayActor():
+
+    def DayAction(self, target: Role) -> Role:
+
+        return target
+
 #Innocent Roles
 
 class Investigator(Innocent):
@@ -72,7 +78,7 @@ class Vigilante(Innocent):
         self.roleSub = "Killing"
         self.investDesc = "This person owns a lot of firearms, they must be a Vigilante or a Mafioso"
 
-class Jailor(Innocent, Unique):
+class Jailor(Innocent, Unique, DayActor):
 
     def __init__(self, instanceOwner):
         
@@ -80,10 +86,6 @@ class Jailor(Innocent, Unique):
         self.roleName = "Jailor"
         self.roleSub = "Killing"
         self.investDesc = "This person has a strong sense of justice, they must be a Sheriff or a Jailor"
-
-    def DayAction(self, target: Role) -> Role:
-
-        return target
 
 #Mafia Roles
 
