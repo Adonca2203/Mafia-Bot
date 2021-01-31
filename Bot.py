@@ -4,7 +4,8 @@ from PopulateGame import *
 from Roles import Mafia
 from MainGameLoop import ChangePhase
 from bottoken import TOKEN
-from MainGameLogic import CacheAllRoles, CacheGameLoop, Subscribe
+from MainGameLogic import Subscribe
+from GameManager import CacheAllRoles, CacheGameLoop
 
 servers = {}
 ongoing_games = {}
@@ -73,6 +74,44 @@ async def GameConclude(ctx, team_class: Role, left_alive: dict):
 
     await ctx.send(f"The game has concluded")
     await ctx.send(f"Congrats to the {type(team_class).__name__} on the win")
+
+async def FindServerOf(user):
+
+    return next((k for k, v in servers.items() if user in v), None)
+
+
+#DM Handler
+@bot.event
+async def on_message(ctx):
+
+    if isinstance(ctx.channel, discord.channel.DMChannel):
+
+        server_of_user = await FindServerOf(ctx.author)
+
+        if server_of_user != None:
+
+            try:
+                
+                game_status = game_active[server_of_user]
+
+            except:
+
+                game_status = False
+
+            #this was for testing
+            #await ctx.author.send(f'''you are part-taking in a game in server: {server_of_user}\nThe game is currently {"Active" if game_status else "Inactive"}''')
+
+            if game_status:
+
+                pass
+
+        else:
+
+            pass
+
+    else:
+
+        await bot.process_commands(ctx)
 
 #Bot Commands
 

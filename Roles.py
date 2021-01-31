@@ -4,6 +4,7 @@ class Role():
     def __init__(self, instanceOwner: int):
 
         self.instanceOwner = instanceOwner
+        self.status = "Alive"
 
     def NightAction(self, target):
 
